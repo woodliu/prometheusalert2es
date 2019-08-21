@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-var logger = log.New(os.Stdout,"[Prmetheus Alert]",log.LstdFlags)
+var logger = log.New(os.Stdout,"[PrmetheusAlert2Es]",log.LstdFlags)
 
 const(
 	ok = 0
@@ -32,14 +32,14 @@ type AlertHandler struct {
 
 func (th *AlertHandler)ServeHTTP(w http.ResponseWriter, r *http.Request){
 	if r.Body == nil {
-		logger.Println("Got empty request body")
+		logger.Println("[Warn] Got empty request body")
 		return
 	}
 	defer r.Body.Close()
 
 	reqbody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		logger.Println(err)
+		logger.Println("[Warn] Read request body err,",err)
 		return
 	}
 
@@ -48,16 +48,16 @@ func (th *AlertHandler)ServeHTTP(w http.ResponseWriter, r *http.Request){
 
 	//Check indice and template
 	if ok != DoRequest(http.MethodGet,esurl+"/"+indice,nil){
-		logger.Println("Not found indice:",indice,",begin to create...")
+		logger.Println("[Info] Not found indice:",indice,",begin to create...")
 		ret := DoRequest(http.MethodPut,esurl+"/"+indice,nil)
 		if ok != ret{
-			logger.Println("Create indice failed")
+			logger.Println("[Error] Create indice failed")
 			return
 		}
 	}
 
 	if ok != DoRequest(http.MethodGet,esurl+"/_template/" + template,nil){
-		logger.Println("Not found template:",template,",begin to create...")
+		logger.Println("[Info] Not found template:",template,",begin to create...")
 		reqbody := []byte(`
 {
   "index_patterns": ["prometheus_alert*"],
@@ -98,7 +98,7 @@ func (th *AlertHandler)ServeHTTP(w http.ResponseWriter, r *http.Request){
 		newBody := bytes.NewBuffer(reqbody)
 		ret := DoRequest(http.MethodPost,esurl+"/_template/" + template,newBody)
 		if ok != ret{
-			logger.Println("Create template failed")
+			logger.Println("[Error] Create template failed")
 			return
 		}
 	}
@@ -107,11 +107,11 @@ func (th *AlertHandler)ServeHTTP(w http.ResponseWriter, r *http.Request){
 	for _,alert := range alerts{
 		jsonalert, err := json.Marshal(alert)
 		if nil != err {
-			logger.Println("Transfor alert to json error,",err)
+			logger.Println("[Error] Transfor alert to json error,",err)
 		}
 		ret := DoRequest(http.MethodPut,esurl+"/prometheus_alert/_doc/"+uuid.New().String(),bytes.NewBuffer(jsonalert))
 		if ok != ret{
-			logger.Println("Put alter failed,alert:",alerts)
+			logger.Println("[Error] Put alter failed,alert:",alerts)
 			return
 		}
 	}
@@ -127,7 +127,7 @@ func DoRequest(method,url string, body io.Reader) int8{
 	client := &http.Client{Transport:tr}
 	req, err := http.NewRequest(method, url, body)
 	if nil != err{
-		logger.Println(err)
+		logger.Println("[Error] New request error",err)
 		return ng
 	}
 	req.SetBasicAuth(esusername, espasswd)
@@ -135,7 +135,7 @@ func DoRequest(method,url string, body io.Reader) int8{
 	req.Header.Set("Content-Type", "application/json")
 	resp,err := client.Do(req)
 	if nil != err{
-		logger.Println(err)
+		logger.Println("[Error] Do request error",err)
 		return ng
 	}
 	defer resp.Body.Close()
@@ -144,13 +144,13 @@ func DoRequest(method,url string, body io.Reader) int8{
 		return ok
 	}
 
-	logger.Println("Request error,resp.StatusCode =",resp.StatusCode,req)
+	logger.Println("[Error] Request error,resp.StatusCode =",resp.StatusCode)
 	return ng
 }
 
 
 var (
-	esusername, espasswd , esurl string
+	esusername, espasswd, esurl, port string
 	h bool
 )
 
@@ -170,6 +170,7 @@ func main(){
 	flag.StringVar(&esusername, "esusername", "", "Elasticsearch username")
 	flag.StringVar(&espasswd, "espasswd", "", "Elasticsearch password")
 	flag.StringVar(&esurl, "esurl", "", "Elasticsearch url")
+	flag.StringVar(&port, "port", "8888", "Prometheusalert2es listen port")
 	flag.Parse()
 
 	if h{
@@ -178,7 +179,7 @@ func main(){
 	}
 
 	if "" == esurl || "" == esusername || "" == espasswd {
-		logger.Println("Must specific esusername, espasswd and esurl")
+		logger.Println("[Error] Must specific esusername, espasswd and esurl")
 		usage()
 		return
 	}
@@ -187,8 +188,8 @@ func main(){
 	serverHandler := http.NewServeMux()
 	serverHandler.Handle("/", &AlertHandler{})
 
-	logger.Println("Start listen on ")
-	http.ListenAndServe(":8888",serverHandler)
+	logger.Println("[Info] Start listen on:"+port)
+	http.ListenAndServe(":"+port,serverHandler)
 
 }
 
