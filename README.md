@@ -35,4 +35,5 @@ alerting:
 #### Config elasticsearch
 
 Make sure elasticsearch URI's scheme is `https`, and you have the `username` and `password` for elasticsearch basic authentication.
+The alerts messages will store in `/prometheus_alert/_doc/${uuid}`
 
