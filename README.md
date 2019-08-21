@@ -22,7 +22,7 @@ prometheusalert2es --esurl=${url} --esusername=${username} --espasswd=${passwd}
 
 #### Config prometheus
 
-Configure in prometheus.yml，add `prometheusalert2es`  target 10.10.10.2:8888
+Configure in prometheus.yml，add `prometheusalert2es`  target `10.10.10.2:8888`
 
 ```yaml
 alerting:
