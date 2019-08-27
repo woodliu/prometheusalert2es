@@ -184,16 +184,16 @@ func main(){
 	}
 
 	if "" == esusername{
-		esurl = os.Getenv("ESUSERNAME")
+		esusername = os.Getenv("ESUSERNAME")
 	}
 
 	if "" == espasswd{
-		esurl = os.Getenv("ESPASSWD")
+		espasswd = os.Getenv("ESPASSWD")
 	}
 
 	if defaultPort == port{
-		if esurl = os.Getenv("PORT"); "" == esurl {
-			esurl = defaultPort
+		if port = os.Getenv("PORT"); "" == port {
+			port = defaultPort
 		}
 	}
 
