@@ -152,13 +152,14 @@ func DoRequest(method,url string, body io.Reader) int8{
 var (
 	esusername, espasswd, esurl, port string
 	h bool
+	defaultPort = "8888"
 )
 
 func usage() {
 	fmt.Fprintf(os.Stderr, `
 Usage: prometheusalert2es [options...]
 
-prometheusalert2es --esurl=${url} --esusername=${username} --espasswd=${passwd}
+prometheusalert2es --esurl=${url} --esusername=${username} --espasswd=${passwd} --port=${port}
 
 Options:
 `)
@@ -170,12 +171,30 @@ func main(){
 	flag.StringVar(&esusername, "esusername", "", "Elasticsearch username")
 	flag.StringVar(&espasswd, "espasswd", "", "Elasticsearch password")
 	flag.StringVar(&esurl, "esurl", "", "Elasticsearch url")
-	flag.StringVar(&port, "port", "8888", "Prometheusalert2es listen port")
+	flag.StringVar(&port, "port", defaultPort, "Prometheusalert2es listen port")
 	flag.Parse()
 
 	if h{
 		usage()
 		return
+	}
+
+	if "" == esurl{
+		esurl = os.Getenv("ESURL")
+	}
+
+	if "" == esusername{
+		esurl = os.Getenv("ESUSERNAME")
+	}
+
+	if "" == espasswd{
+		esurl = os.Getenv("ESPASSWD")
+	}
+
+	if defaultPort == port{
+		if esurl = os.Getenv("PORT"); "" == esurl {
+			esurl = defaultPort
+		}
 	}
 
 	if "" == esurl || "" == esusername || "" == espasswd {
