@@ -105,6 +105,7 @@ func (th *AlertHandler)ServeHTTP(w http.ResponseWriter, r *http.Request){
 
 	//Send alerts
 	for _,alert := range alerts{
+		logger.Println("[Info] Begin to Send alert to elasticsearch:",alert)
 		jsonalert, err := json.Marshal(alert)
 		if nil != err {
 			logger.Println("[Error] Transfor alert to json error,",err)
