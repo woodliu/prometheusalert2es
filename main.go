@@ -19,7 +19,6 @@ import (
 
 var (
 	logger = log.New(os.Stdout,"[PrmetheusAlert2Es]",log.LstdFlags)
-	indice = "prometheus_alert_"
 )
 
 const(
@@ -50,7 +49,7 @@ func (th *AlertHandler)ServeHTTP(w http.ResponseWriter, r *http.Request){
 
 	t := time.Unix(time.Now().Unix(), 0)
 	nowDate := fmt.Sprintf("%d_%d_%d",t.Year(), t.Month(), t.Day())
-	indice = indice + nowDate
+	indice := "prometheus_alert_" + nowDate
 	//Check indice and template
 	if ok != DoRequest(http.MethodGet,esurl+"/"+indice,nil){
 		logger.Println("[Info] Not found indice:",indice,",begin to create...")
