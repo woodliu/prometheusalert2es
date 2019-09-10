@@ -17,13 +17,15 @@ import (
 	"time"
 )
 
-var logger = log.New(os.Stdout,"[PrmetheusAlert2Es]",log.LstdFlags)
+var (
+	logger = log.New(os.Stdout,"[PrmetheusAlert2Es]",log.LstdFlags)
+	indice = "prometheus_alert"
+)
 
 const(
 	ok = 0
 	ng = 1
 
-	indice = "prometheus_alert"
 	template = "prometheus_alert_template"
 )
 
@@ -46,6 +48,9 @@ func (th *AlertHandler)ServeHTTP(w http.ResponseWriter, r *http.Request){
 	var alerts Alerts
 	json.Unmarshal(reqbody,&alerts)
 
+	t := time.Unix(time.Now().Unix(), 0)
+	nowDate := fmt.Sprintf("%d-%d-%d",t.Year(), t.Month(), t.Day())
+	indice = indice + nowDate
 	//Check indice and template
 	if ok != DoRequest(http.MethodGet,esurl+"/"+indice,nil){
 		logger.Println("[Info] Not found indice:",indice,",begin to create...")
@@ -64,6 +69,7 @@ func (th *AlertHandler)ServeHTTP(w http.ResponseWriter, r *http.Request){
   "settings": {
     "number_of_shards": 1,
     "number_of_replicas": 1,
+    "index.lifecycle.name": "prometheus_alert*",
     "index.refresh_interval": "10s",
     "index.query.default_field": "groupLabels.alertname"
   },
