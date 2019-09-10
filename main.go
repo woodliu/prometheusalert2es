@@ -19,7 +19,7 @@ import (
 
 var (
 	logger = log.New(os.Stdout,"[PrmetheusAlert2Es]",log.LstdFlags)
-	indice = "prometheus_alert"
+	indice = "prometheus_alert_"
 )
 
 const(
@@ -49,7 +49,7 @@ func (th *AlertHandler)ServeHTTP(w http.ResponseWriter, r *http.Request){
 	json.Unmarshal(reqbody,&alerts)
 
 	t := time.Unix(time.Now().Unix(), 0)
-	nowDate := fmt.Sprintf("%d-%d-%d",t.Year(), t.Month(), t.Day())
+	nowDate := fmt.Sprintf("%d_%d_%d",t.Year(), t.Month(), t.Day())
 	indice = indice + nowDate
 	//Check indice and template
 	if ok != DoRequest(http.MethodGet,esurl+"/"+indice,nil){
